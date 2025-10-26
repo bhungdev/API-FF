@@ -22,7 +22,8 @@ def get_player_stat():
         # Get and validate parameters
         server = request.args.get('server', 'IND').upper()
         uid = request.args.get('uid')
-        gamemode = request.args.get('gamemode', 'br').lower()
+        gamemode = request.args.get('gamemode', 'br').strip().lower()
+
         matchmode = request.args.get('matchmode', 'CAREER').upper()
 
         # Validate required parameters
