@@ -49,44 +49,49 @@ def get_garena_token(uid, password):
 def get_major_login(logintoken, openid):
     """
     Perform major login with the provided credentials
-    
-    Args:
-        logintoken (str): The login token
-        openid (str): The open ID
-    
-    Returns:
-        dict: JSON response from the login API
     """
-    # Create encrypted payload
-    encrypted_payload = encode_protobuf({
-        "openid": openid,
-        "logintoken": logintoken,
-        "platform": "4",
-    }, Proto.compiled.MajorLogin_pb2.request())
 
-    # API endpoint
-    url = "https://loginbp.ggblueshark.com/MajorLogin"
+    import requests, json
+    print("🔍 [DEBUG] Start MajorLogin")
+    print("🔍 logintoken:", str(logintoken)[:25], "...")
+    print("🔍 openid:", openid)
 
-    # Headers
-    headers = {
-        'User-Agent': "Dalvik/2.1.0 (Linux; U; Android 13; A063 Build/TKQ1.221220.001)",
-        'Connection': "Keep-Alive",
-        'Accept-Encoding': "gzip",
-        'Content-Type': "application/octet-stream",
-        'Expect': "100-continue",
-        'Authorization': "Bearer",
-        'X-Unity-Version': "2018.4.11f1",
-        'X-GA': "v1 1",
-        'ReleaseVersion': RELEASEVERSION,
-        'Content-Type': "application/x-www-form-urlencoded"
-    }
-
-    # Make the request
-    response = requests.post(url, data=encrypted_payload, headers=headers)
     try:
-        # Decode and return the response as JSON
-        message = decode_protobuf(response.content, Proto.compiled.MajorLogin_pb2.response)
-        return message
-    except:
-        print("[e] get_major_login() - ", response.text)
-    return False
+        # Create encrypted payload
+        encrypted_payload = encode_protobuf({
+            "openid": openid,
+            "logintoken": logintoken,
+            "platform": "4",
+        }, Proto.compiled.MajorLogin_pb2.request())
+
+        url = "https://loginbp.ggblueshark.com/MajorLogin"
+        headers = {
+            'User-Agent': "Dalvik/2.1.0 (Linux; U; Android 13; A063 Build/TKQ1.221220.001)",
+            'Connection': "Keep-Alive",
+            'Accept-Encoding': "gzip",
+            'Content-Type': "application/octet-stream",
+            'Expect': "100-continue",
+            'Authorization': "Bearer",
+            'X-Unity-Version': "2018.4.11f1",
+            'X-GA': "v1 1",
+            'ReleaseVersion': RELEASEVERSION,
+        }
+
+        print("🌐 Sending POST to:", url)
+        response = requests.post(url, data=encrypted_payload, headers=headers)
+        print("🧾 Raw response status:", response.status_code)
+        print("🧾 Raw response body (first 300 chars):", response.content[:300])
+
+        # Decode protobuf
+        try:
+            message = decode_protobuf(response.content, Proto.compiled.MajorLogin_pb2.response)
+            print("✅ Decoded MajorLogin:", message)
+            return message
+        except Exception as e:
+            print("❌ Decode error:", str(e))
+            print("🧾 Raw text fallback:", response.text)
+            return {"error": "decode_failed", "raw": response.text}
+
+    except Exception as e:
+        print("❌ Exception in get_major_login():", str(e))
+        return {"error": str(e)}
